@@ -19,6 +19,8 @@ let rotS = 1;          //1 deitado 2 em pé
 let rotL = 1;          //4 posições
 let rotLInvertido = 1; //4 posições
 let rotT = 1;          //4 posições
+const somPontuacao = document.getElementById("SomPontuacao");
+const somPeca = document.getElementById("SomPeca");
 
 
 function iniciarJogo() {
@@ -95,6 +97,7 @@ function movimentarPeca() {
     peca = proximaPeca;
     proximaPeca = new Peca();
     desenharProximaPeca(); // atualizar a visualização da próxima peça
+    somPeca.play();
     // verifica se tem linhas completas.
     verificarLinhasCompletas();
 
@@ -149,6 +152,7 @@ function verificarLinhasCompletas() {
     //Se a linha estiver completamente preenchida, guarda o número da linha para depois remover.
     if (linhaCompleta) {
       linhas.push(l);
+      somPontuacao.play();
     }
   }
   removerLinhas(linhas); //Solicita a remoção das linhas preenchidas.
@@ -261,7 +265,7 @@ Peca.prototype = {
     let mover = podeMover("descer");
     if (mover) {
       let centerX = this.partes[1][0];
-      let centerY = this.partes[1][1]; 
+      let centerY = this.partes[1][1];
 
       let novasPartes = this.partes.map(part => {
         let x = part[0] - centerX;

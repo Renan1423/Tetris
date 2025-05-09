@@ -5,6 +5,16 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="style.css">
     <title>Tetris</title>
+    <audio id="bgMusic" src="BitShift.mp3"></audio>
+    <audio id="SomPontuacao" src="Points.mp3"></audio>
+    <audio id="SomPeca" src="Toggle.mp3"></audio>
+
+    <script>
+        window.addEventListener('click', () => {
+            const audio = document.getElementById('bgMusic');
+            audio.play();
+        }, { once: true });
+    </script>
 </head>
 
 <body>
@@ -14,8 +24,12 @@
     <img id="Bloco4" src="bloco4.png" style="display:none;">
     <div class="container">
         <h1>TETRIS</h1>
-        <canvas id="area" style="border: 10px solid; border-color: whitesmoke; box-shadow: 0px 20px 40px rgba(227, 134, 255, 0.75);" width="500px" height="750px"></canvas>
-        <canvas id="preview" style="margin-bottom: 550px; margin-left: 30px; border: 10px solid; border-color: whitesmoke; box-shadow: 0px 20px 40px rgba(134, 182, 255, 0.75);" width="200px" height="200px"></canvas>
+        <canvas id="area"
+            style="border: 10px solid; border-color: whitesmoke; box-shadow: 0px 20px 40px rgba(227, 134, 255, 0.75);"
+            width="500px" height="750px"></canvas>
+        <canvas id="preview"
+            style="margin-bottom: 550px; margin-left: 30px; border: 10px solid; border-color: whitesmoke; box-shadow: 0px 20px 40px rgba(134, 182, 255, 0.75);"
+            width="200px" height="200px"></canvas>
         <h2 id="pontuacao">Pontuação: 0</h2>
     </div>
     <script src="tetris.js"></script>
