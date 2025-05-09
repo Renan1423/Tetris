@@ -8,6 +8,7 @@ let pontos = 0; // pontuação do jogador.
 let canvas; // canvas.
 let ctx; // contexto 2d do canvas.
 let peca; // tetraminó que está descendo.
+let proximaPeca; // próximo tetraminó.
 let tempo = 0; // tempo do último movimento do tetramino que está descendo.
 let lag = 1000; // intervalo de tempo de movimentação do tetraminó.
 let tam; //Tamanho das peças em blocos
@@ -28,7 +29,9 @@ function iniciarJogo() {
       tela[l][c] = 'white';
     }
   }
-  peca = new Peca(); //instancia um novo tetramino.  
+  peca = new Peca(); //instancia um novo tetramino.
+  proximaPeca = new Peca(); //instancia um novo tetramino.
+  desenharProximaPeca();
   tempo = new Date().getTime(); //Tempo para controla a velocidade de queda dos tetraminós.
 }
 
@@ -38,13 +41,12 @@ function carregarTela() {
   // pinta os quadrados que possuem as partes dos tetraminós na tela.
   for (let l = 0; l < tela.length; l++) {
     for (let c = 0; c < tela[l].length; c++) {
-      // se a cor for diferente de branco, então pinta o quadrado.
+      // se a posição não for branca, desenha o bloco.
       if (tela[l][c] != 'white') {
-        ctx.beginPath();
-        ctx.rect(50 * c, 50 * l, 50, 50);
-        ctx.closePath();
-        ctx.fillStyle = tela[l][c];
-        ctx.fill();
+        if (tela[l][c] instanceof HTMLImageElement) {
+          // Draw the image if it's an image element
+          ctx.drawImage(tela[l][c], 50 * c, 50 * l, 50, 50);
+        }
       }
     }
   }
@@ -63,6 +65,21 @@ function desenharPeca() {
   }
 }
 
+function desenharProximaPeca() {
+  const previewCanvas = document.getElementById("preview");
+  const previewCtx = previewCanvas.getContext("2d");
+
+  // Clear the preview canvas
+  previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+  // Draw each part of the next piece
+  for (let i = 0; i < proximaPeca.partes.length; i++) {
+    let x = (proximaPeca.partes[i][1] - 3) * 50; // Center the piece in the preview
+    let y = (proximaPeca.partes[i][0] + 1) * 50; // Adjust position for better visibility
+    previewCtx.drawImage(proximaPeca.bloco, x, y, 50, 50);
+  }
+}
+
 function movimentarPeca() {
   // verifica se o tetraminó pode descer.
   if (podeMover("descer")) {
@@ -71,11 +88,13 @@ function movimentarPeca() {
     // preenche a posição de parada do tetraminó na tela.
     for (let i = 0; i < tam; i++) {
       if (peca.partes[i][0] >= 0 && peca.partes[i][1] >= 0) {
-        tela[peca.partes[i][0]][peca.partes[i][1]] = peca.cor;
+        tela[peca.partes[i][0]][peca.partes[i][1]] = peca.bloco;
       }
     }
     // cria um novo tetraminó.
-    peca = new Peca();
+    peca = proximaPeca;
+    proximaPeca = new Peca();
+    desenharProximaPeca(); // atualizar a visualização da próxima peça
     // verifica se tem linhas completas.
     verificarLinhasCompletas();
 
@@ -184,17 +203,21 @@ function Peca() {
     [[-1, 4], [-1, 5], [-1, 6], [0, 5]]]; //  peça 6 =  T
 
   this.blocos = [
-    document.getElementById("Bloco1"),
+    document.getElementById("Bloco4"),
     document.getElementById("Bloco2"),
     document.getElementById("Bloco3"),
-    document.getElementById("Bloco4")
+    document.getElementById("Bloco1"),
+    document.getElementById("Bloco3"),
+    document.getElementById("Bloco4"),
+    document.getElementById("Bloco2"),
   ];
 
-  // Seleciona uma imagem aleatória para o tetraminó
-  this.bloco = this.blocos[Math.floor(Math.random() * this.blocos.length)];
-
   // Seleciona um tetraminó aleatório quando uma instância da peça é criada
-  this.partes = this.pecas[Math.floor(Math.random() * this.pecas.length)];
+  let index = Math.floor(Math.random() * this.pecas.length);
+  this.partes = this.pecas[index];
+  // Seleciona uma imagem para o tetraminó
+  this.bloco = this.blocos[index];
+
   tam = this.partes.length;
 }
 
@@ -238,17 +261,50 @@ Peca.prototype = {
     let mover = podeMover("descer");
     if (mover) {
       let centerX = this.partes[1][0];
-      let centerY = this.partes[1][1];
+      let centerY = this.partes[1][1]; 
 
-      for (let i = 0; i < this.partes.length; i++) {
-        let x = this.partes[i][0] - centerX;
-        let y = this.partes[i][1] - centerY;
+      let novasPartes = this.partes.map(part => {
+        let x = part[0] - centerX;
+        let y = part[1] - centerY;
 
         let newX = y;
         let newY = -x;
 
-        this.partes[i][0] = centerX + newX;
-        this.partes[i][1] = centerY + newY;
+        return [centerX + newX, centerY + newY];
+      });
+
+      let ajusteX = 0;
+      let ajusteY = 0;
+
+      for (let i = 0; i < novasPartes.length; i++) {
+        let [newRow, newCol] = novasPartes[i];
+
+        // left
+        if (newCol < 0) {
+          ajusteY = Math.max(ajusteY, -newCol);
+        }
+        // right
+        if (newCol > 9) {
+          ajusteY = Math.min(ajusteY, 9 - newCol);
+        }
+        // bottom
+        if (newRow > 14) {
+          ajusteX = Math.min(ajusteX, 14 - newRow);
+        }
+      }
+
+      for (let i = 0; i < novasPartes.length; i++) {
+        novasPartes[i][0] += ajusteX;
+        novasPartes[i][1] += ajusteY;
+      }
+
+      let podeRotacionar = novasPartes.every(part => {
+        let [row, col] = part;
+        return row >= 0 && row < 15 && col >= 0 && col < 10 && tela[row][col] === 'white';
+      });
+
+      if (podeRotacionar) {
+        this.partes = novasPartes;
       }
     }
   }
